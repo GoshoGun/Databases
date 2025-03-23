@@ -26,14 +26,14 @@ public class DatabaseManager {
             System.out.println("Трябва да въведете име на файл.");
             return;
         }
-        // TODO: Импортиране от файл (ще добавя по-късно)
-        System.out.println("Таблицата от " + fileName + " е заредена (няма реална функция).");
+        // TODO: Импортиране от файл – логика за четене на файл
+        System.out.println("Таблицата от " + fileName + " е заредена (симулирано).");
         tables.put(fileName, new Table(fileName));
     }
 
     public void saveDatabase() {
-        // TODO: Запазване във файл (ще добавя по-късно)
-        System.out.println("Базата данни е запазена (няма реална функция).");
+        // TODO: Реална логика за записване
+        System.out.println("Базата данни е запазена (симулирано).");
     }
 
     public void saveDatabaseAs(String fileName) {
@@ -42,6 +42,6 @@ public class DatabaseManager {
             return;
         }
         // TODO: Реално записване във файл
-        System.out.println("Базата е запазена като " + fileName + " (няма реална функция).");
+        System.out.println("Базата е запазена като " + fileName + " (симулирано).");
     }
 }
