@@ -21,6 +21,8 @@ public class DatabaseClient {
         commands.put("import", new ImportCommand(dbManager));
         commands.put("save", new SaveCommand(dbManager));
         commands.put("saveas", new SaveAsCommand(dbManager));
+        commands.put("describe", new DescribeCommand(dbManager));
+        commands.put("print", new PrintCommand(dbManager));
     }
 
     public void run() {
@@ -52,4 +54,5 @@ public class DatabaseClient {
             System.out.printf("  %s - %s%n", entry.getKey(), entry.getValue().getDescription());
         }
     }
+
 }
