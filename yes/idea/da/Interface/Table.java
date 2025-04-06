@@ -1,4 +1,4 @@
-package yes.idea.da;
+package yes.idea.da.Interface;
 
 import java.util.ArrayList;
 import java.util.List;

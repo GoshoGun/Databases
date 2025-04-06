@@ -1,4 +1,4 @@
-package yes.idea.da;
+package yes.idea.da.Interface;
 
 public class Column {
     private String name;

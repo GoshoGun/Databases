@@ -1,4 +1,4 @@
-package yes.idea.da;
+package yes.idea.da.Commands;
 
 public interface Command {
     void execute(String args);

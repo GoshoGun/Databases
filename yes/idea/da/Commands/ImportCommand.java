@@ -1,4 +1,6 @@
-package yes.idea.da;
+package yes.idea.da.Commands;
+
+import yes.idea.da.Interface.DatabaseManager;
 
 public class ImportCommand implements Command {
     private DatabaseManager dbManager;

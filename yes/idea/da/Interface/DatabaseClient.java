@@ -1,4 +1,6 @@
-package yes.idea.da;
+package yes.idea.da.Interface;
+
+import yes.idea.da.Commands.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,8 @@ public class DatabaseClient {
         commands.put("saveas", new SaveAsCommand(dbManager));
         commands.put("describe", new DescribeCommand(dbManager));
         commands.put("print", new PrintCommand(dbManager));
+        commands.put("export", new ExportCommand(dbManager));
+        commands.put("select", new SelectCommand(dbManager));
     }
 
     public void run() {

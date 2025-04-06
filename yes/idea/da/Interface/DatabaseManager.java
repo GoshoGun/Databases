@@ -1,4 +1,4 @@
-package yes.idea.da;
+package yes.idea.da.Interface;
 
 import java.util.List;
 import java.util.Map;
@@ -129,6 +129,97 @@ public class DatabaseManager {
 
             for (int i = start; i < end; i++) {
                 List<String> row = table.getRows().get(i);
+                for (String cell : row) {
+                    System.out.print(cell + "\t");
+                }
+                System.out.println();
+            }
+
+            if (totalPages <= 1) break;
+
+            System.out.println("Команди: [n] следваща, [p] предишна, [e] изход");
+            String input = scanner.nextLine().trim().toLowerCase();
+            if (input.equals("n") && currentPage < totalPages) {
+                currentPage++;
+            } else if (input.equals("p") && currentPage > 1) {
+                currentPage--;
+            } else if (input.equals("e")) {
+                break;
+            } else {
+                System.out.println("Невалидна команда.");
+            }
+        }
+    }
+    public void exportTable(String tableName, String fileName) {
+        Table table = tables.get(tableName);
+        if (table == null) {
+            System.out.println("Таблицата " + tableName + " не е намерена.");
+            return;
+        }
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileName))) {
+            List<Column> columns = table.getColumns();
+            if (!columns.isEmpty()) {
+                for (int i = 0; i < columns.size(); i++) {
+                    writer.write(columns.get(i).getName());
+                    if (i < columns.size() - 1) {
+                        writer.write(",");
+                    }
+                }
+                writer.newLine();
+            }
+            for (List<String> row : table.getRows()) {
+                for (int i = 0; i < row.size(); i++) {
+                    writer.write(row.get(i));
+                    if (i < row.size() - 1) {
+                        writer.write(",");
+                    }
+                }
+                writer.newLine();
+            }
+            System.out.println("Таблицата " + tableName + " е експортирана във файл: " + fileName);
+        } catch (IOException e) {
+            System.out.println("Грешка при експортирането: " + e.getMessage());
+        }
+    }
+
+    public void selectFromTable(String tableName, int columnIndex, String value) {
+        Table table = tables.get(tableName);
+        if (table == null) {
+            System.out.println("Таблицата " + tableName + " не е намерена.");
+            return;
+        }
+        if (columnIndex < 1 || columnIndex > table.getColumns().size()) {
+            System.out.println("Невалиден номер на колона.");
+            return;
+        }
+        List<List<String>> matchingRows = new ArrayList<>();
+        for (List<String> row : table.getRows()) {
+            if (row.size() >= columnIndex && row.get(columnIndex - 1).equals(value)) {
+                matchingRows.add(row);
+            }
+        }
+        if (matchingRows.isEmpty()) {
+            System.out.println("Няма намерени редове със стойността " + value + " в колона " + columnIndex + ".");
+            return;
+        }
+
+        int pageSize = 5;
+        int totalRows = matchingRows.size();
+        int totalPages = (int) Math.ceil(totalRows / (double) pageSize);
+        int currentPage = 1;
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            int start = (currentPage - 1) * pageSize;
+            int end = Math.min(start + pageSize, totalRows);
+            System.out.println("Страница " + currentPage + " от " + totalPages + ":");
+
+            for (Column col : table.getColumns()) {
+                System.out.print(col.getName() + "\t");
+            }
+            System.out.println();
+            for (int i = start; i < end; i++) {
+                List<String> row = matchingRows.get(i);
                 for (String cell : row) {
                     System.out.print(cell + "\t");
                 }
