@@ -241,4 +241,46 @@ public class DatabaseManager {
             }
         }
     }
+
+    public void insertRow(String tableName, List<String> row) {
+        Table table = tables.get(tableName);
+        if (table == null) {
+            System.out.println("Таблицата " + tableName + " не е намерена.");
+            return;
+        }
+        if (row.size() != table.getColumns().size()) {
+            System.out.println("Грешен брой стойности. Очакват се " + table.getColumns().size() + " стойности.");
+            return;
+        }
+        table.addRow(row);
+        System.out.println("Редът е успешно добавен в таблицата " + tableName + ".");
+    }
+
+    public void updateRows(String tableName, int searchColumn, String searchValue, int targetColumn, String targetValue) {
+        Table table = tables.get(tableName);
+        if (table == null) {
+            System.out.println("Таблицата " + tableName + " не е намерена.");
+            return;
+        }
+        if (searchColumn < 1 || searchColumn > table.getColumns().size() ||
+                targetColumn < 1 || targetColumn > table.getColumns().size()) {
+            System.out.println("Невалиден номер на колона.");
+            return;
+        }
+        int updateCount = 0;
+        for (List<String> row : table.getRows()) {
+            if (row.size() >= searchColumn && row.get(searchColumn - 1).equals(searchValue)) {
+                while (row.size() < targetColumn) {
+                    row.add("");
+                }
+                row.set(targetColumn - 1, targetValue);
+                updateCount++;
+            }
+        }
+        if (updateCount == 0) {
+            System.out.println("Няма редове, отговарящи на зададеното условие.");
+        } else {
+            System.out.println("Актуализирани са " + updateCount + " ред(а) в таблицата " + tableName + ".");
+        }
+    }
 }

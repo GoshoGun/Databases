@@ -27,6 +27,8 @@ public class DatabaseClient {
         commands.put("print", new PrintCommand(dbManager));
         commands.put("export", new ExportCommand(dbManager));
         commands.put("select", new SelectCommand(dbManager));
+        commands.put("insert", new InsertCommand(dbManager));
+        commands.put("update", new UpdateCommand(dbManager));
     }
 
     public void run() {
