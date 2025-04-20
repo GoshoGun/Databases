@@ -283,4 +283,29 @@ public class DatabaseManager {
             System.out.println("Актуализирани са " + updateCount + " ред(а) в таблицата " + tableName + ".");
         }
     }
+
+    public void deleteRows(String tableName, int searchColumn, String searchValue) {
+        Table table = tables.get(tableName);
+        if (table == null) {
+            System.out.println("Таблицата " + tableName + " не е намерена.");
+            return;
+        }
+        table.getRows().removeIf(row ->
+                row.size() >= searchColumn && row.get(searchColumn - 1).equals(searchValue)
+        );
+        System.out.println("Редовете с \"" + searchValue + "\" в колона " + searchColumn + " бяха изтрити.");
+    }
+
+    public void addColumn(String tableName, String columnName, String columnType) {
+        Table table = tables.get(tableName);
+        if (table == null) {
+            System.out.println("Таблицата " + tableName + " не е намерена.");
+            return;
+        }
+        table.addColumn(new Column(columnName, columnType));
+        for (List<String> row : table.getRows()) {
+            row.add("NULL");
+        }
+        System.out.println("Колоната " + columnName + " (" + columnType + ") е добавена към " + tableName + ".");
+    }
 }

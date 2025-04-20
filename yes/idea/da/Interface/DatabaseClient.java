@@ -28,7 +28,8 @@ public class DatabaseClient {
         commands.put("export", new ExportCommand(dbManager));
         commands.put("select", new SelectCommand(dbManager));
         commands.put("insert", new InsertCommand(dbManager));
-        commands.put("update", new UpdateCommand(dbManager));
+        commands.put("delete", new DeleteCommand(dbManager));
+        commands.put("addcolumn", new AddColumnCommand(dbManager));
     }
 
     public void run() {
