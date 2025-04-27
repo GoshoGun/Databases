@@ -33,4 +33,8 @@ public class Table {
     public void addRow(List<String> row) {
         rows.add(row);
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

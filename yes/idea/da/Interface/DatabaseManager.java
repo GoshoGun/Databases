@@ -308,4 +308,47 @@ public class DatabaseManager {
         }
         System.out.println("Колоната " + columnName + " (" + columnType + ") е добавена към " + tableName + ".");
     }
+
+    public void renameTable(String oldName, String newName) {
+        if (!tables.containsKey(oldName)) {
+            System.out.println("Таблицата " + oldName + " не е намерена.");
+            return;
+        }
+        if (tables.containsKey(newName)) {
+            System.out.println("Вече съществува таблица с име " + newName + ".");
+            return;
+        }
+        Table table = tables.get(oldName);
+        tables.remove(oldName);
+        table.setName(newName);
+        tables.put(newName, table);
+        System.out.println("Таблицата " + oldName + " е преименувана на " + newName + ".");
+    }
+
+
+
+    public void innerJoinTables(String table1, int col1, String table2, int col2, String resultName) {
+        Table t1 = tables.get(table1), t2 = tables.get(table2);
+        if (t1 == null || t2 == null) {
+            System.out.println("Една от таблиците не е намерена.");
+            return;
+        }
+        Table result = new Table(resultName);
+        result.getColumns().addAll(t1.getColumns());
+        result.getColumns().addAll(t2.getColumns());
+        for (List<String> r1 : t1.getRows()) {
+            for (List<String> r2 : t2.getRows()) {
+                if (r1.size() >= col1 && r2.size() >= col2
+                        && r1.get(col1-1).equals(r2.get(col2-1))) {
+                    List<String> joined = new ArrayList<>();
+                    joined.addAll(r1);
+                    joined.addAll(r2);
+                    result.addRow(joined);
+                }
+            }
+        }
+        tables.put(resultName, result);
+        System.out.println("Inner join на " + table1 + " и " + table2 +
+                " е записан в нова таблица: " + resultName + ".");
+    }
 }

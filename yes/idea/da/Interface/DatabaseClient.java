@@ -30,6 +30,8 @@ public class DatabaseClient {
         commands.put("insert", new InsertCommand(dbManager));
         commands.put("delete", new DeleteCommand(dbManager));
         commands.put("addcolumn", new AddColumnCommand(dbManager));
+        commands.put("rename", new RenameCommand(dbManager));
+        commands.put("innerjoin", new InnerJoinCommand(dbManager));
     }
 
     public void run() {
