@@ -7,33 +7,41 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Основна логика за опериране върху таблици и файлове.
+ */
 public class DatabaseManager {
-    private Map<String, Table> tables = new HashMap<>();
+    private static final int DEFAULT_PAGE_SIZE = 5;
+    private final Map<String, Table> tables = new HashMap<>();
 
     public void showTables() {
-        if (tables.isEmpty()) System.out.println("Няма таблици.");
-        else {
+        if (tables.isEmpty()) {
+            System.out.println("Няма таблици.");
+        } else {
             System.out.println("Таблици:");
             tables.keySet().forEach(n -> System.out.println("  " + n));
         }
     }
 
     public void importTable(String fileName) {
-        if (fileName.isEmpty()) {
-            System.out.println("import <file>");
+        if (fileName.isBlank()) {
+            System.out.println("Използване: import <file>");
             return;
         }
         try {
-            List<String> lines = Files.readAllLines(Paths.get(fileName));  // :contentReference[oaicite:6]{index=6}
+            List<String> lines = Files.readAllLines(Paths.get(fileName));  // :contentReference[oaicite:1]{index=1}
             Table table = new Table(fileName);
             if (!lines.isEmpty()) {
-                String[] headers = lines.get(0).split(",");
-                for (String h : headers) table.addColumn(new Column(h.trim(), "string"));
-                for (int i = 1; i < lines.size(); i++) {
-                    List<String> row = Arrays.stream(lines.get(i).split(","))
-                            .map(String::trim).collect(Collectors.toList());
-                    table.addRow(row);
-                }
+                // Заглавия
+                Arrays.stream(lines.get(0).split(","))
+                        .map(String::trim)
+                        .forEach(h -> table.addColumn(new Column(h, "string")));
+                // Редове
+                lines.stream().skip(1)
+                        .map(line -> Arrays.stream(line.split(","))
+                                .map(String::trim)
+                                .collect(Collectors.toList()))
+                        .forEach(table::addRow);
             }
             tables.put(fileName, table);
             System.out.println("Импортирано: " + fileName);
@@ -47,11 +55,11 @@ public class DatabaseManager {
     }
 
     public void saveDatabaseAs(String fileName) {
-        if (fileName.isEmpty()) {
-            System.out.println("saveas <file>");
+        if (fileName.isBlank()) {
+            System.out.println("Използване: saveas <file>");
             return;
         }
-        try (BufferedWriter w = Files.newBufferedWriter(Paths.get(fileName))) {  // :contentReference[oaicite:7]{index=7}
+        try (BufferedWriter w = Files.newBufferedWriter(Paths.get(fileName))) {  // :contentReference[oaicite:2]{index=2}
             for (String name : tables.keySet()) {
                 w.write(name);
                 w.newLine();
@@ -64,39 +72,25 @@ public class DatabaseManager {
 
     public void describeTable(String name) {
         Table t = tables.get(name);
-        if (t == null) { System.out.println("Не е намерена."); return; }
+        if (t == null) {
+            System.out.println("Не е намерена: " + name);
+            return;
+        }
         System.out.println("Описание на " + name + ":");
-        if (t.getColumns().isEmpty())
-            System.out.println("  няма колони");
-        else
-            t.getColumns().forEach(c ->
-                    System.out.println("  " + c.getName() + " – " + c.getType()));
+        t.getColumns().forEach(c ->
+                System.out.printf("  %s – %s%n", c.getName(), c.getType()));
     }
 
     public void printTable(String name) {
         Table t = tables.get(name);
-        if (t == null) { System.out.println("Не е намерена."); return; }
-        System.out.println("Съдържание на " + name + ":");
-        t.getColumns().forEach(c -> System.out.print(c.getName() + "\t"));
-        System.out.println();
-        List<List<String>> rows = t.getRows();
-        int pageSize = 5, total = rows.size(), pages = (total + pageSize - 1) / pageSize;
-        int page = 1;
-        Scanner sc = new Scanner(System.in);
-        while (true) {
-            int start = (page - 1) * pageSize, end = Math.min(start + pageSize, total);
-            System.out.println("Стр. " + page + "/" + pages);
-            for (int i = start; i < end; i++) {
-                rows.get(i).forEach(cell -> System.out.print(cell + "\t"));
-                System.out.println();
-            }
-            if (pages <= 1) break;
-            System.out.print("[n]следваща [p]предишна [e]изход: ");
-            String in = sc.nextLine().trim();
-            if (in.equals("n") && page < pages) page++;
-            else if (in.equals("p") && page > 1) page--;
-            else if (in.equals("e")) break;
+        if (t == null) {
+            System.out.println("Не е намерена: " + name);
+            return;
         }
+        List<String> headers = t.getColumns().stream()
+                .map(Column::getName)
+                .collect(Collectors.toList());
+        ConsolePager.page(headers, t.getRows(), DEFAULT_PAGE_SIZE);
     }
 
     public void exportTable(String t, String f) {

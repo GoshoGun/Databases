@@ -2,20 +2,20 @@ package yes.idea.da.Interface;
 
 import yes.idea.da.Commands.*;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Чете команди от потребителя и ги делегира към DatabaseManager.
+ */
 public class DatabaseClient {
-    private DatabaseManager dbManager = new DatabaseManager();
-    private Scanner scanner = new Scanner(System.in);
-    private Map<String, Command> commands = new HashMap<>();
+    private final DatabaseManager dbManager = new DatabaseManager();
+    private final Scanner scanner = new Scanner(System.in);
+    private final Map<String, Command> commands = new HashMap<>();
 
     public DatabaseClient() {
-        initCommands();
-    }
-
-    private void initCommands() {
         commands.put("showtables", new ShowTablesCommand(dbManager));
         commands.put("import",     new ImportCommand(dbManager));
         commands.put("save",       new SaveCommand(dbManager));
@@ -35,20 +35,20 @@ public class DatabaseClient {
     }
 
     public void run() {
-        System.out.println("Добре дошли! Въведете 'help' за списък с команди.");
+        System.out.println("Добре дошли! Въведете 'help'.");
         while (true) {
             System.out.print("> ");
             String input = scanner.nextLine().trim();
-            if (input.equalsIgnoreCase("exit")) break;
+            if ("exit".equalsIgnoreCase(input)) break;
             processInput(input);
         }
     }
 
     private void processInput(String input) {
         String[] parts = input.split("\\s+", 2);
-        String key = parts[0].toLowerCase();
+        String key  = parts[0].toLowerCase();
         String args = parts.length > 1 ? parts[1] : "";
-        if (key.equals("help")) {
+        if ("help".equals(key)) {
             printHelp();
         } else if (commands.containsKey(key)) {
             commands.get(key).execute(args);
@@ -62,5 +62,4 @@ public class DatabaseClient {
         commands.forEach((k, cmd) ->
                 System.out.printf("  %s - %s%n", k, cmd.getDescription()));
     }
-
 }
