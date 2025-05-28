@@ -3,42 +3,36 @@ package yes.idea.da.Commands;
 import yes.idea.da.Interface.DatabaseManager;
 
 public class SelectCommand implements Command {
-    private DatabaseManager dbManager;
+    private final DatabaseManager dbManager;
 
     public SelectCommand(DatabaseManager dbManager) {
         this.dbManager = dbManager;
     }
 
     @Override
-    public void execute(String args) {
-        if (args.isEmpty()) {
-            System.out.println("Използване: select <номер на колона> <стойност> <име на таблица>");
+    public void execute(String rawArgs) {
+        if (rawArgs == null || rawArgs.isBlank()) {
+            System.out.println("Usage: select <colIndex> <value> <tableName> [part]");
             return;
         }
-        String[] parts = args.split("\\s+");
+        String[] parts = rawArgs.split("\\s+");
         if (parts.length < 3) {
-            System.out.println("Използване: select <номер на колона> <стойност> <име на таблица>");
+            System.out.println("Usage: select <colIndex> <value> <tableName> [part]");
             return;
         }
         try {
-            int columnIndex = Integer.parseInt(parts[0]);
+            int colIndex = Integer.parseInt(parts[0]);
             String value = parts[1];
-            StringBuilder sb = new StringBuilder();
-            for (int i = 2; i < parts.length; i++) {
-                sb.append(parts[i]);
-                if (i < parts.length - 1) {
-                    sb.append(" ");
-                }
-            }
-            String tableName = sb.toString();
-            dbManager.selectFromTable(tableName, columnIndex, value);
+            String tableName = parts[2];
+            boolean fullMatch = parts.length < 4 || !"part".equalsIgnoreCase(parts[3]);
+            dbManager.selectFromTable(tableName, colIndex, value, fullMatch);
         } catch (NumberFormatException e) {
-            System.out.println("Номерът на колоната трябва да бъде цяло число.");
+            System.out.println("Номерът на колоната трябва да е цяло число.");
         }
     }
 
     @Override
     public String getDescription() {
-        return "Извежда редове от таблицата, където в указаната колона има зададената стойност";
+        return "select <colIndex> <value> <tableName> [part] – exact match или contains (part)";
     }
 }

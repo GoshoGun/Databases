@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 /**
  * Основна логика за опериране върху таблици и файлове.
@@ -24,49 +25,62 @@ public class DatabaseManager {
     }
 
     public void importTable(String fileName) {
-        if (fileName.isBlank()) {
-            System.out.println("Използване: import <file>");
-            return;
-        }
         try {
-            List<String> lines = Files.readAllLines(Paths.get(fileName));  // :contentReference[oaicite:1]{index=1}
-            Table table = new Table(fileName);
-            if (!lines.isEmpty()) {
-                // Заглавия
-                Arrays.stream(lines.get(0).split(","))
-                        .map(String::trim)
-                        .forEach(h -> table.addColumn(new Column(h, "string")));
-                // Редове
-                lines.stream().skip(1)
-                        .map(line -> Arrays.stream(line.split(","))
-                                .map(String::trim)
-                                .collect(Collectors.toList()))
-                        .forEach(table::addRow);
+            List<String> lines = Files.readAllLines(Paths.get(fileName));
+            if (lines.isEmpty()) {
+                System.out.println("Файлът е празен.");
+                return;
             }
+
+            Table table = new Table(fileName);
+
+            String headerLine = lines.get(0).replace("\uFEFF", "");
+            String[] headers = headerLine.split(";");
+            for (String h : headers) {
+                table.addColumn(new Column(h.trim(), "string"));
+            }
+
+            for (int i = 1; i < lines.size(); i++) {
+                String rowLine = lines.get(i).replace("\uFEFF", "");
+                String[] cells = rowLine.split(";");
+                List<String> row = new ArrayList<>();
+                for (String cell : cells) {
+                    row.add(cell.trim());
+                }
+                table.addRow(row);
+            }
+
             tables.put(fileName, table);
-            System.out.println("Импортирано: " + fileName);
+            System.out.println("Таблицата " + fileName + " е успешно импортирана. (Колони: "
+                    + table.getColumns().size() + ", Редове: " + table.getRows().size() + ")");
         } catch (IOException e) {
-            System.out.println("Грешка import: " + e.getMessage());
+            System.out.println("Грешка при импортирането: " + e.getMessage());
         }
     }
 
-    public void saveDatabase() {
-        saveDatabaseAs("database.txt");
-    }
 
-    public void saveDatabaseAs(String fileName) {
-        if (fileName.isBlank()) {
-            System.out.println("Използване: saveas <file>");
+    public void saveDatabaseAs(String tableName, String fileName) {
+        Table table = tables.get(tableName);
+        if (table == null) {
+            System.out.printf("Таблицата \"%s\" не е намерена.%n", tableName);
             return;
         }
-        try (BufferedWriter w = Files.newBufferedWriter(Paths.get(fileName))) {  // :contentReference[oaicite:2]{index=2}
-            for (String name : tables.keySet()) {
-                w.write(name);
-                w.newLine();
+
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileName))) {
+            String header = table.getColumns().stream()
+                    .map(Column::getName)
+                    .collect(Collectors.joining(";"));
+            writer.write(header);
+            writer.newLine();
+
+            for (List<String> row : table.getRows()) {
+                writer.write(String.join(";", row));
+                writer.newLine();
             }
-            System.out.println("Запазено: " + fileName);
+
+            System.out.printf("Таблицата \"%s\" е записана в \"%s\".%n", tableName, fileName);
         } catch (IOException e) {
-            System.out.println("Грешка saveas: " + e.getMessage());
+            System.out.println("Грешка при запис: " + e.getMessage());
         }
     }
 
@@ -116,35 +130,43 @@ public class DatabaseManager {
         }
     }
 
-    public void selectFromTable(String t, int col, String val) {
-        Table table = tables.get(t);
-        if (table == null) { System.out.println("Не е намерена."); return; }
-        if (col < 1 || col > table.getColumns().size()) {
-            System.out.println("Невалиден номер на колона."); return;
+    public void selectFromTable(String tableName,
+                                int columnIndex,
+                                String value,
+                                boolean fullMatch) {
+        Table table = tables.get(tableName);
+        if (table == null) {
+            System.out.println("Таблицата \"" + tableName + "\" не е намерена.");
+            return;
         }
-        List<List<String>> m = table.getRows().stream()
-                .filter(r -> r.size() >= col && r.get(col-1).equals(val))
+
+        int col0 = columnIndex - 1;
+        if (col0 < 0 || col0 >= table.getColumns().size()) {
+            System.out.println("Невалиден номер на колона: " + columnIndex);
+            return;
+        }
+
+        List<List<String>> matched = table.getRows().stream()
+                .filter(row -> {
+                    if (row.size() <= col0) return false;
+                    String cell = row.get(col0);
+                    return fullMatch
+                            ? cell.equals(value)
+                            : cell.contains(value);
+                })
                 .collect(Collectors.toList());
-        if (m.isEmpty()) { System.out.println("Няма съвпадения."); return; }
-        int pageSize = 5, total = m.size(), pages = (total + pageSize - 1) / pageSize;
-        int page = 1;
-        Scanner sc = new Scanner(System.in);
-        while (true) {
-            int s = (page-1)*pageSize, e = Math.min(s+pageSize, total);
-            table.getColumns().forEach(c -> System.out.print(c.getName()+"\t"));
-            System.out.println();
-            for (int i = s; i < e; i++) {
-                m.get(i).forEach(cell->System.out.print(cell+"\t"));
-                System.out.println();
-            }
-            if (pages <= 1) break;
-            System.out.print("[n]/[p]/[e]: ");
-            String in = sc.nextLine().trim();
-            if (in.equals("n") && page<pages) page++;
-            else if (in.equals("p") && page>1) page--;
-            else if (in.equals("e")) break;
+
+        if (matched.isEmpty()) {
+            System.out.println("Няма редове, отговарящи на условието.");
+            return;
         }
+
+        List<String> headers = table.getColumns().stream()
+                .map(Column::getName)
+                .collect(Collectors.toList());
+        ConsolePager.page(headers, matched, DEFAULT_PAGE_SIZE);
     }
+
 
     public void insertRow(String t, List<String> row) {
         Table table = tables.get(t);
@@ -176,7 +198,7 @@ public class DatabaseManager {
     public void deleteRows(String t, int col, String val) {
         Table table = tables.get(t);
         if (table == null) { System.out.println("Не е намерена."); return; }
-        table.getRows().removeIf(r -> r.size()>=col && r.get(col-1).equals(val));  // :contentReference[oaicite:8]{index=8}
+        table.getRows().removeIf(r -> r.size()>=col && r.get(col-1).equals(val));
         System.out.println("Редове изтрити.");
     }
 
@@ -232,8 +254,8 @@ public class DatabaseManager {
         switch(op) {
             case "sum"      -> System.out.println("Sum: "+vals.stream().mapToDouble(d->d).sum());
             case "product"  -> System.out.println("Prod: "+vals.stream().reduce(1.0,(a,b)->a*b));
-            case "maximum"  -> System.out.println("Max: "+vals.stream().mapToDouble(d->d).max().orElse(Double.NaN));
-            case "minimum"  -> System.out.println("Min: "+vals.stream().mapToDouble(d->d).min().orElse(Double.NaN));
+            case "max"  -> System.out.println("Max: "+vals.stream().mapToDouble(d->d).max().orElse(Double.NaN));
+            case "min"  -> System.out.println("Min: "+vals.stream().mapToDouble(d->d).min().orElse(Double.NaN));
             default         -> System.out.println("Непознато.");
         }
     }

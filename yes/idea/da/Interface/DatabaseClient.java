@@ -18,7 +18,6 @@ public class DatabaseClient {
     public DatabaseClient() {
         commands.put("showtables", new ShowTablesCommand(dbManager));
         commands.put("import",     new ImportCommand(dbManager));
-        commands.put("save",       new SaveCommand(dbManager));
         commands.put("saveas",     new SaveAsCommand(dbManager));
         commands.put("describe",   new DescribeCommand(dbManager));
         commands.put("print",      new PrintCommand(dbManager));

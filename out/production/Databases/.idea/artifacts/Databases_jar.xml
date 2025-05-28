@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Databases:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Databases_jar</output-path>
+    <root id="archive" name="Databases.jar">
+      <element id="module-output" name="Databases" />
+    </root>
+  </artifact>
+</component>

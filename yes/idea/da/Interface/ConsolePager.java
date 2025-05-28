@@ -9,13 +9,6 @@ import java.util.Scanner;
 public class ConsolePager {
     private static final Scanner SCANNER = new Scanner(System.in);
 
-    /**
-     * Принтира таблица с навигация [n] [p] [e].
-     *
-     * @param headers  заглавия на колоните
-     * @param rows     редове с данни
-     * @param pageSize брой реда на страница
-     */
     public static void page(List<String> headers,
                             List<List<String>> rows,
                             int pageSize) {
